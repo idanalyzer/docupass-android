@@ -38,11 +38,8 @@ android {
     androidResources {
         noCompress += "task"
     }
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-        }
-    }
+    // Publishing variants are configured by the vanniktech maven-publish plugin
+    // (see the mavenPublishing block below) — do not add a singleVariant here too.
 }
 
 dependencies {
