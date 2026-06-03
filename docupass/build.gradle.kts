@@ -1,8 +1,11 @@
+import com.vanniktech.maven.publish.SonatypeHost
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.maven.publish)
 }
 
 android {
@@ -69,4 +72,33 @@ dependencies {
     implementation(libs.mediapipe.tasks.vision)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+mavenPublishing {
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
+    signAllPublications()
+    coordinates("com.idanalyzer", "docupass", "0.1.0")
+    pom {
+        name.set("DocuPass Android SDK")
+        description.set("Native in-app ID verification & KYC for Android (ID Analyzer DocuPass) — document scan, face match, on-device liveness. No WebView.")
+        url.set("https://github.com/idanalyzer/docupass-android")
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://opensource.org/licenses/MIT")
+            }
+        }
+        developers {
+            developer {
+                id.set("idanalyzer")
+                name.set("ID Analyzer")
+                url.set("https://www.idanalyzer.com")
+            }
+        }
+        scm {
+            url.set("https://github.com/idanalyzer/docupass-android")
+            connection.set("scm:git:https://github.com/idanalyzer/docupass-android.git")
+            developerConnection.set("scm:git:ssh://git@github.com/idanalyzer/docupass-android.git")
+        }
+    }
 }

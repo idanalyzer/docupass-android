@@ -1,0 +1,56 @@
+name: Publish to Maven Central
+
+# Publishes com.idanalyzer:docupass to Maven Central (Sonatype Central Portal)
+# when a version tag (v*) is pushed.
+#
+# Required repository secrets (same as id-analyzer-v2-java):
+#   CENTRAL_TOKEN_USERNAME  - Central Portal user token username
+#   CENTRAL_TOKEN_PASSWORD  - Central Portal user token password
+#   MAVEN_GPG_PRIVATE_KEY   - ASCII-armored GPG private key (full block)
+#   MAVEN_GPG_PASSPHRASE    - passphrase for that GPG key
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK packages
+        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Publish public GPG key to keyservers (best effort)
+        run: |
+          echo "${{ secrets.MAVEN_GPG_PRIVATE_KEY }}" | gpg --batch --import || true
+          KEYID=$(gpg --list-secret-keys --with-colons | awk -F: '/^sec/{print $5; exit}')
+          gpg --armor --export "$KEYID" > pub.asc
+          curl -sS -m 30 --data-urlencode "keytext@pub.asc" https://keys.openpgp.org/vks/v1/upload || true
+          gpg --batch --keyserver keyserver.ubuntu.com --send-keys "$KEYID" || true
+          rm -f pub.asc
+
+      - name: Publish to Maven Central
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :docupass:publishAndReleaseToMavenCentral --no-configuration-cache --stacktrace
