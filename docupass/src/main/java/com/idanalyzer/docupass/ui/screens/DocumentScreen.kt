@@ -71,7 +71,7 @@ private fun DocumentSelection(vm: DocuPassViewModel, session: DocuPassSession) {
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(countryOpen) },
                 modifier = Modifier.menuAnchor().fillMaxWidth(),
             )
-            androidx.compose.material3.ExposedDropdownMenu(
+            ExposedDropdownMenu(
                 expanded = countryOpen,
                 onDismissRequest = { countryOpen = false },
             ) {
@@ -92,7 +92,7 @@ private fun DocumentSelection(vm: DocuPassViewModel, session: DocuPassSession) {
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(typeOpen) },
                 modifier = Modifier.menuAnchor().fillMaxWidth(),
             )
-            androidx.compose.material3.ExposedDropdownMenu(
+            ExposedDropdownMenu(
                 expanded = typeOpen,
                 onDismissRequest = { typeOpen = false },
             ) {
