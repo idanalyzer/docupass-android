@@ -36,6 +36,10 @@ internal class HttpTransport(
         ignoreUnknownKeys = true
         isLenient = true
         explicitNulls = false
+        // The server marshals empty/absent slices and optional values as explicit
+        // JSON `null` (e.g. "customField": null when no custom form is configured).
+        // Coerce those nulls to each property's default instead of throwing.
+        coerceInputValues = true
     }
     private val jsonMedia = "application/json; charset=utf-8".toMediaType()
 

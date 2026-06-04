@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.2
+
+Crash fix.
+
+- Fixed a JSON parse crash when the session response contains an explicit
+  `null` for a list field (e.g. `customField` is `null` whenever no custom form
+  is configured). The client now coerces server-sent nulls to each field's
+  default, so the document / face / phone / contract flows no longer crash for
+  profiles without custom fields.
+
 ## 0.1.1
 
 Audit fixes, customization hooks, and documentation corrections.
