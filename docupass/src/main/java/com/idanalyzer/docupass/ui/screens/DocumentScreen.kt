@@ -104,12 +104,28 @@ private fun DocumentSelection(vm: DocuPassViewModel, session: DocuPassSession) {
             }
         }
 
+        val requirements = remember(session) { documentRequirements(session) }
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Please make sure:", style = MaterialTheme.typography.titleSmall)
+            requirements.forEach { Text("•  $it", style = MaterialTheme.typography.bodySmall) }
+        }
+
         Button(
             onClick = { vm.submitDocumentSelection(country, type) },
             enabled = country.isNotBlank() && type.isNotBlank(),
             modifier = Modifier.fillMaxWidth(),
         ) { Text("Continue") }
     }
+}
+
+/** Capture-requirement bullets driven by the session's verify-* flags (mirrors the web). */
+private fun documentRequirements(s: DocuPassSession): List<String> = buildList {
+    add("The whole document is in frame, in focus, and free of glare.")
+    if (s.verifyDocumentNo.isNotBlank()) add("The document number is clearly visible.")
+    if (s.verifyName.isNotBlank()) add("Your full name is readable.")
+    if (s.verifyDob.isNotBlank() || s.verifyAge.isNotBlank()) add("Your date of birth is readable.")
+    if (s.verifyAddress.isNotBlank()) add("Your address is readable.")
+    if (s.verifyPostCode.isNotBlank()) add("Your postcode is readable.")
 }
 
 @Composable
@@ -123,8 +139,12 @@ private fun DocumentCapture(vm: DocuPassViewModel, session: DocuPassSession) {
     DisposableEffect(Unit) { onDispose { camera.stop() } }
 
     val capturingBack = front != null && needBack
-    val label = if (front == null) "Capture the front of your document"
-    else "Capture the back of your document"
+    val isPassport = session.selectedDocumentType.equals("P", ignoreCase = true)
+    val label = when {
+        front == null && isPassport -> "Capture the passport data page"
+        front == null -> "Capture the front of your document"
+        else -> "Capture the back of your document"
+    }
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CameraPreview(modifier = Modifier.fillMaxSize()) { view -> camera.startDocumentCapture(view) }
