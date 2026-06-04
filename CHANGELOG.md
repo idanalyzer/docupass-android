@@ -21,5 +21,4 @@ Initial DocuPass Android SDK — Phase 1 of the mobile-SDK program.
   form, phone verification, and e-signature contract steps.
 - Sample app under `:sample`.
 
-Built against DOCUPASS_PROTOCOL_SPEC.md (validated against the production
-`coreapi_go` backend).
+Built against the DocuPass v3 API and verified against the production service.

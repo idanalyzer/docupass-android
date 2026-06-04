@@ -24,7 +24,7 @@ data class LivenessUpdate(
 )
 
 /**
- * Direct port of the DocuPass v3 web `FaceChecker` (DOCUPASS_PROTOCOL_SPEC §8):
+ * Direct port of the DocuPass v3 web `FaceChecker`:
  * neutral-face hold -> turn left -> turn right active-liveness, with best-neutral
  * frame selection by eye-polygon area. Pure logic — feed it landmarks + the frame
  * they were computed from; it tracks timing and picks the capture.

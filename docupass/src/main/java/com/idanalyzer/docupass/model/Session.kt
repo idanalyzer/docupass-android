@@ -4,11 +4,11 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * The flat `get_action` response (`DocupassGetSessionResponse` in coreapi_go).
+ * The flat `get_action` response.
  * Also returned in the body of every successful POST step, so the client always
  * has the next state to render. Unknown JSON keys are ignored (forward-compat).
  *
- * Field names mirror the server's exact JSON tags — see DOCUPASS_PROTOCOL_SPEC §6.
+ * Field names mirror the server's exact JSON tags.
  */
 @Serializable
 data class DocuPassSession(

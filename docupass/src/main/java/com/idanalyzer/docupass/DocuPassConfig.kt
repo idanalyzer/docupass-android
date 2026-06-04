@@ -37,7 +37,7 @@ data class DocuPassConfig(
 
 /**
  * Active-liveness parameters. Defaults are ported 1:1 from the DocuPass v3 web
- * client (DOCUPASS_PROTOCOL_SPEC §8) — change only with care, they are tuned
+ * client — change only with care, they are tuned
  * against the same `face_landmarker.task` model.
  */
 data class LivenessConfig(

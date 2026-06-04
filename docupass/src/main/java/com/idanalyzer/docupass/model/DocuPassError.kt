@@ -1,7 +1,7 @@
 package com.idanalyzer.docupass.model
 
 /**
- * Authoritative DocuPass error / terminal codes (from coreapi_go `response.go`).
+ * Authoritative DocuPass error / terminal codes (from the DocuPass API).
  * These arrive in `error.code` of an envelope with `success:false` and HTTP 200 —
  * never branch on HTTP status for DocuPass logic, branch on these.
  */

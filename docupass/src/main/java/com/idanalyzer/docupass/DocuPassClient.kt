@@ -21,7 +21,7 @@ import kotlinx.serialization.json.put
  *
  * This class performs no UI and no capture — pair it with the headless
  * [com.idanalyzer.docupass.session.DocuPassController] or the drop-in
- * [com.idanalyzer.docupass.ui.DocuPassView]. See DOCUPASS_PROTOCOL_SPEC.
+ * [com.idanalyzer.docupass.ui.DocuPassView].
  */
 class DocuPassClient(val config: DocuPassConfig) {
 
