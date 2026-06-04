@@ -83,6 +83,7 @@ fun CustomFormScreen(vm: DocuPassViewModel, session: DocuPassSession) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PhoneScreen(vm: DocuPassViewModel, session: DocuPassSession) {
     val preset = session.userPhone.isNotBlank()
@@ -102,13 +103,40 @@ fun PhoneScreen(vm: DocuPassViewModel, session: DocuPassSession) {
         if (preset) {
             Text("We'll send a code to ${session.userPhone}", style = MaterialTheme.typography.bodyLarge)
         } else {
+            var ccOpen by remember { mutableStateOf(false) }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = dialCode,
-                    onValueChange = { dialCode = it },
-                    label = { Text("Code") },
-                    modifier = Modifier.fillMaxWidth(0.3f),
-                )
+                if (session.phoneCountryCode.isNotEmpty()) {
+                    // Dial-code picker populated from the session (matches the web's <select>).
+                    ExposedDropdownMenuBox(
+                        expanded = ccOpen,
+                        onExpandedChange = { ccOpen = it },
+                        modifier = Modifier.fillMaxWidth(0.42f),
+                    ) {
+                        OutlinedTextField(
+                            value = dialCode,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Code") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(ccOpen) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        )
+                        ExposedDropdownMenu(expanded = ccOpen, onDismissRequest = { ccOpen = false }) {
+                            session.phoneCountryCode.forEach { pc ->
+                                DropdownMenuItem(
+                                    text = { Text("${pc.name} ${pc.dialCode}") },
+                                    onClick = { dialCode = pc.dialCode; ccOpen = false },
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    OutlinedTextField(
+                        value = dialCode,
+                        onValueChange = { dialCode = it },
+                        label = { Text("Code") },
+                        modifier = Modifier.fillMaxWidth(0.42f),
+                    )
+                }
                 OutlinedTextField(
                     value = localNumber,
                     onValueChange = { localNumber = it.filter(Char::isDigit) },
