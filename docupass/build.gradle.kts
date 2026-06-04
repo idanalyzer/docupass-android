@@ -74,7 +74,7 @@ dependencies {
 mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
     signAllPublications()
-    coordinates("com.idanalyzer", "docupass", "0.1.0")
+    coordinates("com.idanalyzer", "docupass", "0.1.1")
     pom {
         name.set("DocuPass Android SDK")
         description.set("Native in-app ID verification & KYC for Android (ID Analyzer DocuPass) — document scan, face match, on-device liveness. No WebView.")
