@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.1.3
+
+GPS / location support.
+
+- Fixed `DOCUPASS_FATAL_ERROR` (`LOCATION_HEADER_MISSING`) right after document
+  selection on DocuPass profiles that have **location tracking enabled**. When the
+  session sets `gps = true`, the drop-in `DocuPassView` now requests location
+  permission, obtains a device fix (via the framework `LocationManager` — no Google
+  Play Services dependency), and sends the `Geolocation` header on every subsequent
+  request. The flow is held on a brief "getting your location" screen until the fix
+  is set, so the next step can't be submitted without it. (Previously the
+  `setGeolocation` plumbing existed but was never invoked, so any GPS-enabled profile
+  failed on the second server call.)
+- Added the `ACCESS_COARSE_LOCATION` permission (so users who grant only
+  "approximate" location still work) and three overridable strings:
+  `locationTitle`, `locationBody`, `locationPermissionRequired`.
+
 ## 0.1.2
 
 Crash fix.

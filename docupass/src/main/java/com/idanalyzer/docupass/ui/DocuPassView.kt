@@ -29,6 +29,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.idanalyzer.docupass.DocuPassConfig
 import com.idanalyzer.docupass.DocuPassResult
+import com.idanalyzer.docupass.location.LocationProvider
 import com.idanalyzer.docupass.model.DocuPassTask
 import com.idanalyzer.docupass.session.DocuPassState
 import com.idanalyzer.docupass.ui.screens.ContractScreen
@@ -74,6 +75,12 @@ fun DocuPassView(
     }
     var welcomeAcknowledged by remember { mutableStateOf(false) }
 
+    // GPS: only when the session sets gps=true. The server requires a Geolocation
+    // header on every call after get_action, so we must obtain a fix before the
+    // next step (document selection) can be submitted.
+    var geoReady by remember { mutableStateOf(false) }
+    var geoRequested by remember { mutableStateOf(false) }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -81,8 +88,55 @@ fun DocuPassView(
         if (granted) vm.start() else onResult(DocuPassResult.Cancelled(config.reference))
     }
 
+    suspend fun acquireLocation() {
+        val loc = LocationProvider.current(context)
+        if (loc != null) {
+            vm.setGeolocation(loc.first, loc.second, loc.third)
+            geoReady = true
+        } else {
+            snackbar.showSnackbar(strings.locationPermissionRequired)
+            geoRequested = false // allow a retry
+        }
+    }
+
+    val locationLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        val granted = result[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            result[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (granted) {
+            scope.launch { acquireLocation() }
+        } else {
+            scope.launch { snackbar.showSnackbar(strings.locationPermissionRequired) }
+            geoRequested = false
+        }
+    }
+
     LaunchedEffect(Unit) {
         if (cameraGranted) vm.start() else permissionLauncher.launch(Manifest.permission.CAMERA)
+    }
+
+    // When the session asks for GPS, request location + obtain a fix exactly once.
+    val needsGps = (state as? DocuPassState.Step)?.session?.gps == true
+    LaunchedEffect(needsGps) {
+        if (needsGps && !geoReady && !geoRequested) {
+            geoRequested = true
+            val hasPermission =
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                    PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                    PackageManager.PERMISSION_GRANTED
+            if (hasPermission) {
+                acquireLocation()
+            } else {
+                locationLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                    )
+                )
+            }
+        }
     }
 
     // Surface recoverable rejections as a snackbar.
@@ -116,8 +170,13 @@ fun DocuPassView(
                     val session = s.session
                     val showWelcome = !welcomeAcknowledged &&
                         (session.welcomeMessage.isNotBlank() || session.companyName.isNotBlank())
+                    val needLocation = session.gps && !geoReady
                     if (showWelcome) {
                         WelcomeScreen(session = session, onContinue = { welcomeAcknowledged = true })
+                    } else if (needLocation) {
+                        // Block the flow until the Geolocation fix is set, otherwise
+                        // the next server call fails with LOCATION_HEADER_MISSING.
+                        MessageScreen(title = strings.locationTitle, body = strings.locationBody)
                     } else {
                         when (session.parsedTask) {
                             DocuPassTask.DOCUMENT -> DocumentScreen(vm, session)

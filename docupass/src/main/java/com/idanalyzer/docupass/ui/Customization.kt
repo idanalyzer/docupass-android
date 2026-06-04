@@ -30,6 +30,9 @@ data class DocuPassStrings(
     val waitingTitle: String = "Waiting",
     val waitingBody: String = "Waiting for another party to complete their part.",
     val cameraPermissionRequired: String = "Camera permission is required",
+    val locationTitle: String = "Getting your location",
+    val locationBody: String = "This verification requires your location. Please allow location access.",
+    val locationPermissionRequired: String = "Location access is required to continue.",
 
     // Welcome
     val welcomeFallback: String = "You'll be guided through a quick identity verification.",
@@ -111,6 +114,9 @@ fun DocuPassStrings.withOverrides(o: Map<String, String>): DocuPassStrings = cop
     waitingTitle = o["waitingTitle"] ?: waitingTitle,
     waitingBody = o["waitingBody"] ?: waitingBody,
     cameraPermissionRequired = o["cameraPermissionRequired"] ?: cameraPermissionRequired,
+    locationTitle = o["locationTitle"] ?: locationTitle,
+    locationBody = o["locationBody"] ?: locationBody,
+    locationPermissionRequired = o["locationPermissionRequired"] ?: locationPermissionRequired,
     welcomeFallback = o["welcomeFallback"] ?: welcomeFallback,
     selectDocumentTitle = o["selectDocumentTitle"] ?: selectDocumentTitle,
     countryLabel = o["countryLabel"] ?: countryLabel,
