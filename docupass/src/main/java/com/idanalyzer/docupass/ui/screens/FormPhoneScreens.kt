@@ -31,16 +31,18 @@ import com.idanalyzer.docupass.model.CustomFieldType
 import com.idanalyzer.docupass.model.DocuPassSession
 import com.idanalyzer.docupass.model.PhoneChannel
 import com.idanalyzer.docupass.ui.DocuPassViewModel
+import com.idanalyzer.docupass.ui.LocalDocuPassStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomFormScreen(vm: DocuPassViewModel, session: DocuPassSession) {
+    val s = LocalDocuPassStrings.current
     val answers = remember { mutableStateMapOf<String, String>() }
     Column(
         Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("A few more details", style = MaterialTheme.typography.headlineSmall)
+        Text(s.customFormTitle, style = MaterialTheme.typography.headlineSmall)
         session.customField.forEach { field ->
             val value = answers[field.fieldId] ?: ""
             when (field.parsedType) {
@@ -79,13 +81,14 @@ fun CustomFormScreen(vm: DocuPassViewModel, session: DocuPassSession) {
             onClick = { vm.submitForm(answers.toMap()) },
             enabled = allFilled,
             modifier = Modifier.fillMaxWidth(),
-        ) { Text("Continue") }
+        ) { Text(s.continueButton) }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PhoneScreen(vm: DocuPassViewModel, session: DocuPassSession) {
+    val s = LocalDocuPassStrings.current
     val preset = session.userPhone.isNotBlank()
     var dialCode by remember { mutableStateOf(session.phoneCountryCode.firstOrNull()?.dialCode ?: "+1") }
     var localNumber by remember { mutableStateOf("") }
@@ -98,10 +101,10 @@ fun PhoneScreen(vm: DocuPassViewModel, session: DocuPassSession) {
         Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("Verify your phone", style = MaterialTheme.typography.headlineSmall)
+        Text(s.phoneTitle, style = MaterialTheme.typography.headlineSmall)
 
         if (preset) {
-            Text("We'll send a code to ${session.userPhone}", style = MaterialTheme.typography.bodyLarge)
+            Text("${s.phonePresetPrefix}${session.userPhone}", style = MaterialTheme.typography.bodyLarge)
         } else {
             var ccOpen by remember { mutableStateOf(false) }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -116,7 +119,7 @@ fun PhoneScreen(vm: DocuPassViewModel, session: DocuPassSession) {
                             value = dialCode,
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Code") },
+                            label = { Text(s.phoneCodeLabel) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(ccOpen) },
                             modifier = Modifier.menuAnchor().fillMaxWidth(),
                         )
@@ -133,14 +136,14 @@ fun PhoneScreen(vm: DocuPassViewModel, session: DocuPassSession) {
                     OutlinedTextField(
                         value = dialCode,
                         onValueChange = { dialCode = it },
-                        label = { Text("Code") },
+                        label = { Text(s.phoneCodeLabel) },
                         modifier = Modifier.fillMaxWidth(0.42f),
                     )
                 }
                 OutlinedTextField(
                     value = localNumber,
                     onValueChange = { localNumber = it.filter(Char::isDigit) },
-                    label = { Text("Phone number") },
+                    label = { Text(s.phoneNumberLabel) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -151,18 +154,18 @@ fun PhoneScreen(vm: DocuPassViewModel, session: DocuPassSession) {
             Button(
                 onClick = { vm.sendPhoneCode(currentNumber(), PhoneChannel.SMS); codeSent = true },
                 modifier = Modifier.fillMaxWidth(0.5f),
-            ) { Text("Send SMS") }
+            ) { Text(s.phoneSendSms) }
             OutlinedButton(
                 onClick = { vm.sendPhoneCode(currentNumber(), PhoneChannel.CALL); codeSent = true },
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text("Call me") }
+            ) { Text(s.phoneCall) }
         }
 
         if (codeSent) {
             OutlinedTextField(
                 value = code,
                 onValueChange = { if (it.length <= 6) code = it.filter(Char::isDigit) },
-                label = { Text("6-digit code") },
+                label = { Text(s.phoneCodeEntryLabel) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -170,7 +173,7 @@ fun PhoneScreen(vm: DocuPassViewModel, session: DocuPassSession) {
                 onClick = { vm.verifyPhoneCode(currentNumber(), code) },
                 enabled = code.length == 6,
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text("Verify") }
+            ) { Text(s.phoneVerify) }
         }
     }
 }

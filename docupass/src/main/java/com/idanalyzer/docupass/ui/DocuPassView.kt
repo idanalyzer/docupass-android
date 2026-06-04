@@ -14,6 +14,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -55,6 +56,8 @@ import kotlinx.coroutines.launch
 fun DocuPassView(
     config: DocuPassConfig,
     modifier: Modifier = Modifier,
+    strings: DocuPassStrings = DocuPassStrings(),
+    theme: DocuPassTheme = DocuPassTheme(),
     onResult: (DocuPassResult) -> Unit,
 ) {
     val context = LocalContext.current
@@ -94,6 +97,13 @@ fun DocuPassView(
         (state as? DocuPassState.Finished)?.let { onResult(it.result) }
     }
 
+    CompositionLocalProvider(
+        LocalDocuPassStrings provides strings,
+        LocalDocuPassTheme provides theme,
+    ) {
+      val themedScheme = theme.primaryColor?.let { MaterialTheme.colorScheme.copy(primary = it) }
+          ?: MaterialTheme.colorScheme
+      MaterialTheme(colorScheme = themedScheme) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbar) },
@@ -116,20 +126,22 @@ fun DocuPassView(
                             DocuPassTask.PHONE -> PhoneScreen(vm, session)
                             DocuPassTask.CONTRACT -> ContractScreen(vm, session)
                             DocuPassTask.PARTY_PENDING -> MessageScreen(
-                                title = "Waiting",
-                                body = "Waiting for another party to complete their part.",
+                                title = strings.waitingTitle,
+                                body = strings.waitingBody,
                             )
                             DocuPassTask.UNKNOWN -> MessageScreen(
-                                title = "Please wait",
-                                body = "Preparing the next step…",
+                                title = strings.pleaseWaitTitle,
+                                body = strings.pleaseWaitBody,
                             )
                         }
                     }
                 }
             }
             if (!cameraGranted) {
-                Text("Camera permission is required", style = MaterialTheme.typography.bodyMedium)
+                Text(strings.cameraPermissionRequired, style = MaterialTheme.typography.bodyMedium)
             }
         }
+    }
+      }
     }
 }

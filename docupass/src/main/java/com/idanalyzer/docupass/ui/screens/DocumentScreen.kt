@@ -30,7 +30,9 @@ import androidx.compose.ui.unit.dp
 import com.idanalyzer.docupass.camera.ImageUtils
 import com.idanalyzer.docupass.catalog.CountryCatalog
 import com.idanalyzer.docupass.model.DocuPassSession
+import com.idanalyzer.docupass.ui.DocuPassStrings
 import com.idanalyzer.docupass.ui.DocuPassViewModel
+import com.idanalyzer.docupass.ui.LocalDocuPassStrings
 import kotlinx.coroutines.launch
 
 private const val DOCUMENT_MAX_SIZE = 1600
@@ -49,6 +51,7 @@ fun DocumentScreen(vm: DocuPassViewModel, session: DocuPassSession) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DocumentSelection(vm: DocuPassViewModel, session: DocuPassSession) {
+    val s = LocalDocuPassStrings.current
     val context = LocalContext.current
     val catalog = remember { CountryCatalog.load(context) }
     val countries = remember(session) { catalog.countries(session.acceptedCountries) }
@@ -60,14 +63,14 @@ private fun DocumentSelection(vm: DocuPassViewModel, session: DocuPassSession) {
     var typeOpen by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("Select your document", style = MaterialTheme.typography.headlineSmall)
+        Text(s.selectDocumentTitle, style = MaterialTheme.typography.headlineSmall)
 
         ExposedDropdownMenuBox(expanded = countryOpen, onExpandedChange = { countryOpen = it }) {
             OutlinedTextField(
                 value = catalog.country(country)?.name_en ?: country,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Country") },
+                label = { Text(s.countryLabel) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(countryOpen) },
                 modifier = Modifier.menuAnchor().fillMaxWidth(),
             )
@@ -88,7 +91,7 @@ private fun DocumentSelection(vm: DocuPassViewModel, session: DocuPassSession) {
                 value = types.firstOrNull { it.code == type }?.label ?: "",
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Document type") },
+                label = { Text(s.documentTypeLabel) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(typeOpen) },
                 modifier = Modifier.menuAnchor().fillMaxWidth(),
             )
@@ -104,9 +107,9 @@ private fun DocumentSelection(vm: DocuPassViewModel, session: DocuPassSession) {
             }
         }
 
-        val requirements = remember(session) { documentRequirements(session) }
+        val requirements = remember(session) { documentRequirements(session, s) }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Please make sure:", style = MaterialTheme.typography.titleSmall)
+            Text(s.pleaseMakeSure, style = MaterialTheme.typography.titleSmall)
             requirements.forEach { Text("•  $it", style = MaterialTheme.typography.bodySmall) }
         }
 
@@ -114,22 +117,23 @@ private fun DocumentSelection(vm: DocuPassViewModel, session: DocuPassSession) {
             onClick = { vm.submitDocumentSelection(country, type) },
             enabled = country.isNotBlank() && type.isNotBlank(),
             modifier = Modifier.fillMaxWidth(),
-        ) { Text("Continue") }
+        ) { Text(s.continueButton) }
     }
 }
 
 /** Capture-requirement bullets driven by the session's verify-* flags (mirrors the web). */
-private fun documentRequirements(s: DocuPassSession): List<String> = buildList {
-    add("The whole document is in frame, in focus, and free of glare.")
-    if (s.verifyDocumentNo.isNotBlank()) add("The document number is clearly visible.")
-    if (s.verifyName.isNotBlank()) add("Your full name is readable.")
-    if (s.verifyDob.isNotBlank() || s.verifyAge.isNotBlank()) add("Your date of birth is readable.")
-    if (s.verifyAddress.isNotBlank()) add("Your address is readable.")
-    if (s.verifyPostCode.isNotBlank()) add("Your postcode is readable.")
+private fun documentRequirements(session: DocuPassSession, str: DocuPassStrings): List<String> = buildList {
+    add(str.reqClear)
+    if (session.verifyDocumentNo.isNotBlank()) add(str.reqDocumentNo)
+    if (session.verifyName.isNotBlank()) add(str.reqName)
+    if (session.verifyDob.isNotBlank() || session.verifyAge.isNotBlank()) add(str.reqDob)
+    if (session.verifyAddress.isNotBlank()) add(str.reqAddress)
+    if (session.verifyPostCode.isNotBlank()) add(str.reqPostcode)
 }
 
 @Composable
 private fun DocumentCapture(vm: DocuPassViewModel, session: DocuPassSession) {
+    val s = LocalDocuPassStrings.current
     val camera = rememberCameraController()
     val scope = rememberCoroutineScope()
     var front by remember { mutableStateOf<Bitmap?>(null) }
@@ -141,9 +145,9 @@ private fun DocumentCapture(vm: DocuPassViewModel, session: DocuPassSession) {
     val capturingBack = front != null && needBack
     val isPassport = session.selectedDocumentType.equals("P", ignoreCase = true)
     val label = when {
-        front == null && isPassport -> "Capture the passport data page"
-        front == null -> "Capture the front of your document"
-        else -> "Capture the back of your document"
+        front == null && isPassport -> s.capturePassport
+        front == null -> s.captureFront
+        else -> s.captureBack
     }
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -176,7 +180,7 @@ private fun DocumentCapture(vm: DocuPassViewModel, session: DocuPassSession) {
                     }
                 },
                 modifier = Modifier.fillMaxWidth().aspectRatio(6f),
-            ) { Text(if (capturingBack) "Capture back" else "Capture") }
+            ) { Text(if (capturingBack) s.captureBackButton else s.capture) }
         }
     }
 }

@@ -19,7 +19,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.idanalyzer.docupass.liveness.LivenessStep
 import com.idanalyzer.docupass.model.DocuPassSession
+import com.idanalyzer.docupass.ui.DocuPassStrings
 import com.idanalyzer.docupass.ui.DocuPassViewModel
+import com.idanalyzer.docupass.ui.LocalDocuPassStrings
 
 @Composable
 fun FaceScreen(vm: DocuPassViewModel, session: DocuPassSession) {
@@ -43,9 +45,10 @@ fun FaceScreen(vm: DocuPassViewModel, session: DocuPassSession) {
             Modifier.fillMaxWidth().padding(24.dp).align(Alignment.BottomCenter),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            val s = LocalDocuPassStrings.current
             val step = liveness?.step ?: LivenessStep.FRONT
             Text(
-                text = if (!ready) "Loading face check…" else instructionFor(step),
+                text = if (!ready) s.faceLoading else instructionFor(step, s),
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
             )
@@ -56,7 +59,7 @@ fun FaceScreen(vm: DocuPassViewModel, session: DocuPassSession) {
                 )
                 if (!it.faceVisible && ready) {
                     Text(
-                        "No face detected — center your face in the frame",
+                        s.faceNoFace,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(top = 8.dp),
                     )
@@ -66,10 +69,10 @@ fun FaceScreen(vm: DocuPassViewModel, session: DocuPassSession) {
     }
 }
 
-private fun instructionFor(step: LivenessStep): String = when (step) {
-    LivenessStep.FRONT -> "Face forward and hold still"
-    LivenessStep.FRONT_SUCCESS -> "Great — keep going"
-    LivenessStep.TURN_LEFT -> "Slowly turn your head to the left"
-    LivenessStep.TURN_RIGHT -> "Slowly turn your head to the right"
-    LivenessStep.DONE_SUCCESS, LivenessStep.COMPLETE -> "All done"
+private fun instructionFor(step: LivenessStep, s: DocuPassStrings): String = when (step) {
+    LivenessStep.FRONT -> s.faceForward
+    LivenessStep.FRONT_SUCCESS -> s.faceGreat
+    LivenessStep.TURN_LEFT -> s.faceTurnLeft
+    LivenessStep.TURN_RIGHT -> s.faceTurnRight
+    LivenessStep.DONE_SUCCESS, LivenessStep.COMPLETE -> s.faceDone
 }

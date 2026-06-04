@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.idanalyzer.docupass.model.DocuPassSession
 import com.idanalyzer.docupass.ui.DocuPassViewModel
+import com.idanalyzer.docupass.ui.LocalDocuPassStrings
 import java.io.ByteArrayOutputStream
 
 // Signature fields are `<img data-signature …>` / `<div data-signature …>` elements
@@ -50,6 +51,7 @@ private val PREFILL_PLACEHOLDER = Regex("%\\{[0-9A-Za-z_.\\-]+}")
 
 @Composable
 fun ContractScreen(vm: DocuPassViewModel, session: DocuPassSession) {
+    val s = LocalDocuPassStrings.current
     val uids = remember(session.contractSource) {
         SIGNATURE_TAG.findAll(session.contractSource)
             .mapNotNull { UID_IN_TAG.find(it.value)?.groupValues?.get(1) }
@@ -65,7 +67,7 @@ fun ContractScreen(vm: DocuPassViewModel, session: DocuPassSession) {
         Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("Review & sign", style = MaterialTheme.typography.headlineSmall)
+        Text(s.contractTitle, style = MaterialTheme.typography.headlineSmall)
 
         if (session.contractSource.isNotBlank()) {
             AndroidView(
@@ -80,7 +82,7 @@ fun ContractScreen(vm: DocuPassViewModel, session: DocuPassSession) {
         }
 
         uids.forEach { uid ->
-            Text("Signature", style = MaterialTheme.typography.titleSmall)
+            Text(s.contractSignature, style = MaterialTheme.typography.titleSmall)
             SignaturePad(
                 modifier = Modifier.fillMaxWidth().height(160.dp),
                 onCaptured = { bmp -> signatures[uid] = bmp.toPngDataUrl() },
@@ -93,7 +95,7 @@ fun ContractScreen(vm: DocuPassViewModel, session: DocuPassSession) {
             onClick = { vm.submitContract(signatures.toMap()) },
             enabled = ready,
             modifier = Modifier.fillMaxWidth(),
-        ) { Text(if (uids.isEmpty()) "Accept & Submit" else "Submit signatures") }
+        ) { Text(if (uids.isEmpty()) s.contractAccept else s.contractSubmit) }
     }
 }
 
@@ -131,7 +133,7 @@ private fun SignaturePad(
                 }
             }
         }
-        OutlinedButton(onClick = { strokes.clear(); onCleared() }) { Text("Clear") }
+        OutlinedButton(onClick = { strokes.clear(); onCleared() }) { Text(LocalDocuPassStrings.current.contractClear) }
     }
 }
 
