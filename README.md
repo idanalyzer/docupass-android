@@ -80,14 +80,14 @@ ever holds a short-lived `reference`.
 ```kotlin
 // build.gradle.kts (app module)
 dependencies {
-    implementation("com.idanalyzer:docupass:0.1.1")
+    implementation("com.idanalyzer:docupass:0.1.4")
 }
 ```
 
 ```groovy
 // build.gradle (Groovy)
 dependencies {
-    implementation 'com.idanalyzer:docupass:0.1.1'
+    implementation 'com.idanalyzer:docupass:0.1.4'
 }
 ```
 

@@ -111,6 +111,8 @@ class DocuPassController(val config: DocuPassConfig) {
                 DocuPassState.Finished(DocuPassResult.Error(config.reference, err))
             err.code == null -> // transport (network/parse) — unrecoverable for this attempt
                 _state.value = DocuPassState.Finished(DocuPassResult.Error(config.reference, err))
+            err.isDisplay -> // ERROR_POPUP: show the message, stay on the current step.
+                _transientErrors.tryEmit(err)
             else -> {
                 // Recoverable (DOCUMENT_REJECTED / FACE_REJECTED / GENERIC_ERROR /
                 // INVALID_ACTION): surface and resync to the authoritative state.
@@ -122,12 +124,16 @@ class DocuPassController(val config: DocuPassConfig) {
     }
 
     private fun mapTerminal(err: DocuPassError): DocuPassResult {
-        val redirect = err.message?.takeIf { it.isNotBlank() }
-        return if (err.code == DocuPassErrorCode.FAILED) {
-            DocuPassResult.Failed(config.reference, err.code, err.message, redirect)
-        } else {
-            // COMPLETED / ACCEPTED / UNDER_REVIEW / REDIRECT
+        // Only COMPLETED/REDIRECT/ACCEPTED/UNDER_REVIEW/FAILED put a redirect URL in
+        // `message`; SUCCESS_MESSAGE/ERROR_MESSAGE/REVIEW_CONTRACT carry display text.
+        val msg = err.message?.takeIf { it.isNotBlank() }
+        val redirect = if (DocuPassErrorCode.carriesRedirectUrl(err.code)) msg else null
+        return if (DocuPassErrorCode.isSuccessTerminal(err.code)) {
+            // COMPLETED / ACCEPTED / UNDER_REVIEW / REDIRECT / SUCCESS_MESSAGE / REVIEW_CONTRACT
             DocuPassResult.Completed(config.reference, redirect, err.code)
+        } else {
+            // FAILED / ERROR_MESSAGE
+            DocuPassResult.Failed(config.reference, err.code, msg, redirect)
         }
     }
 }

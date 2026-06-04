@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.4
+
+Terminal/display error-code classification.
+
+- Fixed an infinite resync loop: `DOCUPASS_ERROR_MESSAGE` (e.g. session expired) is
+  a hard stop, but was treated as recoverable — the controller re-ran `get_action`,
+  got the same error, and looped, hammering the network. It is now a terminal failure
+  surfaced as a stable result.
+- Classified the remaining display/message codes instead of treating them as
+  recoverable: `DOCUPASS_SUCCESS_MESSAGE` and `DOCUPASS_REVIEW_CONTRACT` are terminal
+  (success / signed-and-under-review); `DOCUPASS_ERROR_POPUP` (phone-step alerts like
+  "incorrect format" / "limit reached") now shows the message and **stays on the
+  current step** so the user can retry, rather than resyncing.
+
 ## 0.1.3
 
 GPS / location support.
