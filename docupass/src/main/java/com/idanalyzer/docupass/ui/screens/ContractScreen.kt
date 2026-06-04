@@ -41,13 +41,23 @@ import com.idanalyzer.docupass.model.DocuPassSession
 import com.idanalyzer.docupass.ui.DocuPassViewModel
 import java.io.ByteArrayOutputStream
 
-/** Signature-field uids embedded in the rendered contract HTML. */
-private val UID_REGEX = Regex("data-uid=\"([^\"]+)\"")
+// Signature fields are `<img data-signature …>` / `<div data-signature …>` elements
+// carrying a data-uid (matches the DocuPass v3 web client). Other data-uid elements
+// (e.g. data-image placeholders) are NOT signature fields and must be ignored.
+private val SIGNATURE_TAG = Regex("<[a-zA-Z][^>]*\\bdata-signature\\b[^>]*>", RegexOption.IGNORE_CASE)
+private val UID_IN_TAG = Regex("data-uid=\"([^\"]+)\"")
+private val PREFILL_PLACEHOLDER = Regex("%\\{[0-9A-Za-z_.\\-]+}")
 
 @Composable
 fun ContractScreen(vm: DocuPassViewModel, session: DocuPassSession) {
     val uids = remember(session.contractSource) {
-        UID_REGEX.findAll(session.contractSource).map { it.groupValues[1] }.distinct().toList()
+        SIGNATURE_TAG.findAll(session.contractSource)
+            .mapNotNull { UID_IN_TAG.find(it.value)?.groupValues?.get(1) }
+            .distinct().toList()
+    }
+    // Strip leftover unfilled prefill placeholders, like the web client does.
+    val displayHtml = remember(session.contractSource) {
+        session.contractSource.replace(PREFILL_PLACEHOLDER, "")
     }
     val signatures = remember { mutableStateMapOf<String, String>() } // uid -> dataURL
 
@@ -63,7 +73,7 @@ fun ContractScreen(vm: DocuPassViewModel, session: DocuPassSession) {
                 factory = { ctx ->
                     WebView(ctx).apply {
                         settings.javaScriptEnabled = false
-                        loadDataWithBaseURL(null, session.contractSource, "text/html", "utf-8", null)
+                        loadDataWithBaseURL(null, displayHtml, "text/html", "utf-8", null)
                     }
                 },
             )
