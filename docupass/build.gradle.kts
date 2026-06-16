@@ -49,8 +49,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
 
-    // Compose (drop-in UI). Consumers using only the headless API still get these
-    // transitively but pay no UI cost unless they render DocuPassView.
+    // Compose (drop-in UI). Consumers using only the event API still get these
+    // transitively but pay no UI cost unless they render KYCScreen.
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
@@ -73,7 +73,13 @@ dependencies {
 
 mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
-    signAllPublications()
+    val hasSigningCredentials =
+        providers.gradleProperty("signingInMemoryKey").isPresent ||
+            providers.gradleProperty("signing.secretKeyRingFile").isPresent ||
+            providers.gradleProperty("signing.keyId").isPresent
+    if (hasSigningCredentials) {
+        signAllPublications()
+    }
     coordinates("com.idanalyzer", "docupass", "0.1.4")
     pom {
         name.set("DocuPass Android SDK")

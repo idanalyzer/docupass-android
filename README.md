@@ -1,128 +1,85 @@
-# DocuPass Android SDK — Native In-App ID Verification, KYC & Liveness for Android
+# DocuPass Android SDK
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.idanalyzer/docupass)](https://central.sonatype.com/artifact/com.idanalyzer/docupass)
-[![min SDK 24](https://img.shields.io/badge/minSdk-24-green)](#requirements)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![ID Analyzer](https://img.shields.io/badge/by-ID%20Analyzer-0b5cff)](https://www.idanalyzer.com)
+Native Android SDK for running an ID Analyzer DocuPass verification flow inside
+your app. The SDK includes:
 
-Add **identity verification and KYC** to your Android app in minutes. The DocuPass
-Android SDK runs the entire flow **natively, on-device** — ID document scanning,
-biometric **face match**, and **active liveness detection** — with **no external
-browser and no WebView**. Drop in one Jetpack Compose component, get a result
-callback.
+- A ready-to-use Jetpack Compose UI through `KYCScreen`
+- An event-driven API for building your own UI
+- Native document capture with CameraX
+- Active face verification with MediaPipe
+- Phone, custom form, document, face, contract, and pending-party flow handling
 
-Built by **[ID Analyzer](https://www.idanalyzer.com)** — the identity verification
-platform trusted for [ID document recognition](https://www.idanalyzer.com/products/id-scanner-api.html),
-[biometric verification](https://www.idanalyzer.com/products/biometric-verification.html),
-and [AML screening](https://www.idanalyzer.com/products/aml-api.html) across 190+
-countries and 14,000+ document types.
-
-> **Why native instead of a WebView?** Wrapping the DocuPass web link
-> (`v.idanalyzer.com`) in a `WebView` breaks the camera (`getUserMedia` permission
-> failures, blocked liveness). This SDK owns the camera with **CameraX** and runs
-> liveness on-device with **Google MediaPipe**, so verification just works inside
-> your app.
-
-**📚 Full documentation:** [developer.idanalyzer.com/help/docupass-android-sdk](https://developer.idanalyzer.com/help/docupass-android-sdk)
-· **🌐 Product:** [DocuPass](https://www.idanalyzer.com/products/docupass.html)
-· **📦 Other platforms:** [iOS](https://github.com/idanalyzer/docupass-ios) ·
-[React Native](https://github.com/idanalyzer/docupass-react-native) ·
-[Flutter](https://github.com/idanalyzer/docupass-flutter)
-
----
-
-## Features
-
-- 📱 **Fully native capture** — CameraX document & selfie capture; no WebView, no `getUserMedia` issues.
-- 🧠 **On-device active liveness** — MediaPipe face landmarks; the user holds still, then turns left/right.
-- 🪪 **Global document support** — passports, driver licenses, and ID cards from 190+ countries.
-- ✍️ **Full DocuPass flow** — document selection & capture, face match, custom forms, phone (SMS/voice OTP) verification, and **e-signature contracts**.
-- 🎨 **White-label** — override every label (any language) and theme the brand color & logo. One-line drop-in *or* fully headless.
-- 🔒 **Your API key never touches the device** — the app only holds a short-lived `reference`.
-- 🌍 **US & EU data regions** — selected automatically from the reference.
-
-## How it works
-
-DocuPass is server-driven. **Your API key is secret and lives only on your backend** —
-the mobile app never creates a session or reads results directly. The device only
-ever holds a short-lived `reference`.
-
-1. **Server → create a session.** Call `POST /docupass` with your API key (any
-   [ID Analyzer server SDK](https://developer.idanalyzer.com/help) — Node, Python,
-   PHP, .NET, Java, Go) using a [KYC profile](https://developer.idanalyzer.com/help/profiles).
-   Set a **webhook URL** on the profile so results are pushed to you. You get back a **`reference`**.
-2. **App → run the SDK.** Pass the `reference` to `DocuPassView`. The SDK runs capture
-   + liveness on-device and fires `onResult` when the flow ends — a **UX signal** so
-   you can update your screen. It is *not* the authoritative result.
-3. **Server → receive the verified result** (extracted identity data + the
-   accept / review / reject decision):
-   - **Recommended — webhook (push).** When verification concludes, ID Analyzer
-     `POST`s the full transaction — name, date of birth, document number, face-match,
-     AML, decision, warnings, captured images — to your webhook URL, with automatic retries.
-   - **Or pull it server-side** with `GET /docupass/{reference}` (your API key) — it
-     returns the DocuPass record including the final transaction with all verified data.
-
-> 🔒 **Never ship your API key in the app, and never call `POST /docupass` or
-> `GET /docupass/{reference}` from the mobile SDK** — both require your secret API
-> key. Treat the SDK's `onResult` purely as a UI cue; **your backend is the source of
-> truth** for the verified data and decision (via webhook or server-side fetch).
-
-## Requirements
-
-- **Android 7.0+ (minSdk 24)**, compileSdk 35
-- Jetpack Compose (for the drop-in UI; the headless API has no Compose requirement)
-- The MediaPipe liveness model and the country/document catalog are **bundled** — no extra downloads.
+The mobile app only needs a short-lived DocuPass `reference`. Your API key must
+stay on your backend.
 
 ## Installation
 
-`com.idanalyzer:docupass` is published on **Maven Central**.
+Add the SDK from Maven Central:
 
 ```kotlin
-// build.gradle.kts (app module)
 dependencies {
-    implementation("com.idanalyzer:docupass:0.1.+")
+    implementation("com.idanalyzer:docupass:0.1.4")
 }
 ```
 
-```groovy
-// build.gradle (Groovy)
-dependencies {
-    implementation 'com.idanalyzer:docupass:0.1.+'
+The SDK requires Android 7.0 or newer.
+
+```kotlin
+android {
+    defaultConfig {
+        minSdk = 24
+    }
 }
 ```
 
-The library manifest already declares the `CAMERA` and `INTERNET` permissions
-(`ACCESS_FINE_LOCATION` is only requested at runtime if your DocuPass profile
-enables GPS) — nothing to add.
+The SDK manifest declares `INTERNET`, `CAMERA`, and optional location
+permissions. Camera permission is requested by the Quick UI when the verification
+flow needs capture. If your DocuPass profile requires GPS, obtain location in
+your app and pass it as `geolocation = "lat,lng,accuracy"` when starting
+`KYCScreen` or creating an event session.
 
-## Quick start (drop-in UI)
+## Create a Reference
 
-This is the entire integration. `DocuPassView` requests camera permission, renders
-every step the session asks for, runs liveness, and calls you back with the outcome:
+Create a DocuPass session on your server, then pass the returned `reference` to
+your Android app. Do not create sessions from the mobile app, and do not put your
+ID Analyzer API key in the APK.
+
+Example server-side flow:
+
+1. Your backend calls ID Analyzer to create a DocuPass session.
+2. Your backend sends the returned `reference` to your Android app.
+3. The Android app runs the SDK with that reference.
+4. Your backend receives the final verification result through webhook or a
+   server-side result lookup.
+
+The SDK's finish callback is a UI signal. Your backend remains the source of
+truth for the final verification decision and identity data.
+
+## Quick UI
+
+Use `KYCScreen` when you want the SDK to render the complete verification flow.
 
 ```kotlin
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.idanalyzer.docupass.DocuPassConfig
-import com.idanalyzer.docupass.DocuPassResult
-import com.idanalyzer.docupass.ui.DocuPassView
+import com.idanalyzer.docupass.KYCScreen
+import com.idanalyzer.docupass.KYCResult
 
 class VerifyActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val reference = intent.getStringExtra("docupass_reference").orEmpty()
+
         setContent {
-            DocuPassView(
-                config = DocuPassConfig(reference = "US...your-reference..."),
-                onResult = { result ->
-                    when (result) {
-                        is DocuPassResult.Completed -> {
-                            // Flow finished — update your UI. The verified data arrives on
-                            // your server via webhook (or GET /docupass/{reference}), not here.
-                        }
-                        is DocuPassResult.Failed    -> { /* rejected */ }
-                        is DocuPassResult.Cancelled -> { /* user dismissed */ }
-                        is DocuPassResult.Error     -> { /* network / fatal error */ }
-                    }
+            KYCScreen(
+                reference = reference,
+                onFinish = { result: KYCResult ->
+                    // Called when the user taps FINISH on the final screen.
+                    finish()
+                },
+                onBackAtFirstStep = {
+                    finish()
                 },
             )
         }
@@ -130,125 +87,130 @@ class VerifyActivity : ComponentActivity() {
 }
 ```
 
-### Getting a `reference` (server side)
+`KYCScreen` handles:
 
-Create the DocuPass session on your backend, never in the app. Example with the
-official Node.js server SDK:
+- Loading the server-driven DocuPass task
+- Document country and type selection
+- Document capture and upload
+- Face verification with randomized actions
+- Phone verification
+- Custom form submission
+- Contract review and signature submission
+- Back navigation between non-terminal steps
+- Final success or failure screen
 
-```javascript
-import { DocuPass } from "idanalyzer2";
+`onFinish` is called only after the user taps the final `FINISH` button. It is
+not called immediately when the server reaches a terminal state.
 
-const docupass = new DocuPass("YOUR_API_KEY", "YOUR_PROFILE_ID", "US");
-const session = await docupass.createDocuPass();
-// Send session.reference down to your app and pass it to DocuPassView.
-```
+## Event API
 
-See the [server SDK docs](https://developer.idanalyzer.com/help) for Python, PHP,
-.NET, Java, and Go.
-
-## Customization — labels, languages & branding
-
-Both customization points are optional parameters on `DocuPassView`, so one-line
-usage stays unchanged.
-
-### Re-label or translate to any language
-
-`DocuPassStrings` exposes **every** user-facing label as an overridable field
-(English by default). Override any subset to re-word the copy or localize to any
-language — you supply the translations, so you're never limited to a fixed set:
+Use the event API when you want to build your own UI. The SDK owns the DocuPass
+state machine and API calls; your app renders screens and provides captured data.
 
 ```kotlin
-import com.idanalyzer.docupass.ui.DocuPassStrings
+import com.idanalyzer.docupass.DocupassConfigFactory
+import com.idanalyzer.docupass.DocupassKycEventKind
+import com.idanalyzer.docupass.DocupassKycListener
+import com.idanalyzer.docupass.DocupassKycNativeState
+import com.idanalyzer.docupass.DocupassKycSession
 
-DocuPassView(
-    config = DocuPassConfig(reference = reference),
-    strings = DocuPassStrings(
-        selectDocumentTitle = "Sélectionnez votre document",
-        phoneTitle = "Vérifiez votre téléphone",
-        phoneSendSms = "Envoyer le SMS",
-        faceForward = "Regardez droit devant et ne bougez pas",
-        faceTurnLeft = "Tournez lentement la tête vers la gauche",
-    ),
-    onResult = { /* ... */ },
+val session = DocupassKycSession(
+    DocupassConfigFactory.fromReference(reference)
 )
-```
 
-### Brand color & logo
-
-`DocuPassTheme` applies your brand color to the primary controls and shows a logo
-on the welcome screen (defaults to the logo configured on your DocuPass profile):
-
-```kotlin
-import androidx.compose.ui.graphics.Color
-import com.idanalyzer.docupass.ui.DocuPassTheme
-
-DocuPassView(
-    config = DocuPassConfig(reference = reference),
-    theme = DocuPassTheme(
-        primaryColor = Color(0xFF1565C0),
-        logoUrl = "https://yourbrand.example.com/logo.png",
-    ),
-    onResult = { /* ... */ },
-)
-```
-
-## Headless API (build your own UI)
-
-For complete control over layout and look, skip `DocuPassView` and drive the
-protocol yourself. Everything is public: `DocuPassController` (the state machine),
-`DocuPassClient` (the 9 protocol endpoints), `LivenessController` + `FaceLandmarkerEngine`
-(the liveness pipeline), and `CameraController`.
-
-```kotlin
-import com.idanalyzer.docupass.session.DocuPassController
-import com.idanalyzer.docupass.session.DocuPassState
-
-val controller = DocuPassController(DocuPassConfig(reference = reference))
-
-lifecycleScope.launch {
-    controller.state.collect { state ->
-        when (state) {
-            is DocuPassState.Step -> {
-                // state.session.parsedTask tells you which screen to show:
-                // DOCUMENT, FACE, CUSTOM_FORM, PHONE, CONTRACT, PARTY_PENDING
+val subscription = session.subscribe(object : DocupassKycListener {
+    override fun onStateChanged(state: DocupassKycNativeState) {
+        when (state.event) {
+            DocupassKycEventKind.LOADING -> {
+                // Show loading UI.
             }
-            is DocuPassState.Finished -> { /* state.result */ }
-            else -> Unit
+
+            DocupassKycEventKind.DOCUMENT_COUNTRY_SELECTION -> {
+                val countries = state.documentCountrySelection?.countries.orEmpty()
+                // Render country choices, then call:
+                // session.selectDocumentCountry(country.code)
+            }
+
+            DocupassKycEventKind.DOCUMENT_SELECTION -> {
+                val documentTypes = state.documentSelection?.documentTypes.orEmpty()
+                // Render document type choices, then call:
+                // session.selectDocumentType(documentType.apiTypeCode)
+            }
+
+            DocupassKycEventKind.DOCUMENT_CAPTURE -> {
+                // Capture or select images in your UI, convert them to base64 JPEG,
+                // then call:
+                // session.uploadDocument(frontBase64, backBase64)
+            }
+
+            DocupassKycEventKind.FACE_VERIFICATION -> {
+                val actions = state.face?.actions.orEmpty()
+                // Run your own face UI, then call:
+                // session.uploadFace(faceBase64List)
+            }
+
+            DocupassKycEventKind.PHONE_VERIFICATION -> {
+                // Send an OTP:
+                // session.sendPhoneCode(number, "sms")
+                // Verify an OTP:
+                // session.verifyPhoneCode(number, code)
+            }
+
+            DocupassKycEventKind.CUSTOM_FORM -> {
+                // Submit answers keyed by fieldId:
+                // session.saveCustomForm(answers)
+            }
+
+            DocupassKycEventKind.CONTRACT -> {
+                // Submit signatures keyed by signature field uid:
+                // session.submitContract(signatures)
+            }
+
+            DocupassKycEventKind.PARTY_PENDING -> {
+                // Let the user wait, then call:
+                // session.refresh()
+            }
+
+            DocupassKycEventKind.COMPLETED,
+            DocupassKycEventKind.FAILED -> {
+                // Show your final UI. Fetch authoritative results on your backend.
+            }
         }
     }
-}
+})
 
-controller.start()
-controller.submitDocumentSelection(country = "US", type = "D") // D = driver license
-controller.submitDocument(frontBase64, backBase64)             // your own capture
-controller.submitFace(listOf(faceBase64))                      // your own liveness
+session.start()
+
+// Close when your screen is destroyed.
+subscription.close()
+session.close()
 ```
 
-## Handling the result
+The event API intentionally does not own your camera UI. For custom UI
+integrations, your app captures document and face images and submits base64 data
+through the session methods.
 
-`DocuPassResult` is a sealed interface:
+## Back Navigation
 
-| Result | Meaning |
-|---|---|
-| `Completed(reference, redirectUrl?, code?)` | Verification finished (accepted / under review). Fetch the data with `GET /docupass/{reference}`. |
-| `Failed(reference, code?, message?, redirectUrl?)` | Rejected or failed. |
-| `Cancelled(reference)` | The user dismissed the flow. |
-| `Error(reference, error)` | Network or fatal session error. |
+`KYCScreen` handles Android back presses. Non-terminal steps go back to the
+previous SDK step when possible. If the user is already on the first step,
+`onBackAtFirstStep` is called so your app can close the screen.
 
-`onResult` only tells your **app** that the flow ended, so you can update the UI — it
-carries no verified identity data. The verified data and decision arrive on your
-**server**: via the **webhook** you configured on the DocuPass profile (recommended,
-with retries), or by calling `GET /docupass/{reference}` server-side with your API
-key. Never use a client-side result as the decision.
+Final success and failure screens are terminal. Back presses do not leave those
+screens; the user must tap `FINISH`.
 
-## Links
+For custom UI, observe `state` and route your own back affordance to the session
+methods you expose in your screen.
 
-- 🌐 ID Analyzer: [www.idanalyzer.com](https://www.idanalyzer.com)
-- 🪪 DocuPass product: [idanalyzer.com/products/docupass.html](https://www.idanalyzer.com/products/docupass.html)
-- 📚 Developer docs & KB: [developer.idanalyzer.com/help](https://developer.idanalyzer.com/help)
-- 📱 This SDK's guide: [developer.idanalyzer.com/help/docupass-android-sdk](https://developer.idanalyzer.com/help/docupass-android-sdk)
-- 🔑 Get API keys / customer portal: [portal2.idanalyzer.com](https://portal2.idanalyzer.com)
-- 🧩 Other SDKs: [iOS](https://github.com/idanalyzer/docupass-ios) · [React Native](https://github.com/idanalyzer/docupass-react-native) · [Flutter](https://github.com/idanalyzer/docupass-flutter)
+## Results
+
+`KYCResult` contains local flow details such as selected document country/type,
+uploaded image base64 values, the current session state, and terminal error
+information. It is useful for app UI decisions, but it is not the authoritative
+identity verification result.
+
+Use your backend webhook or server-side DocuPass result lookup to decide whether
+the user is accepted, rejected, or under review.
 
 ## License
 
