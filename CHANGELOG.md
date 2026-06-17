@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.6
 
 - Expanded the public README with detailed Quick UI, event session lifecycle,
   state payload, session method, and parameter reference documentation.

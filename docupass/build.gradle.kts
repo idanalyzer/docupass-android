@@ -80,7 +80,7 @@ mavenPublishing {
     if (hasSigningCredentials) {
         signAllPublications()
     }
-    coordinates("com.idanalyzer", "docupass", "0.1.5")
+    coordinates("com.idanalyzer", "docupass", "0.1.6")
     pom {
         name.set("DocuPass Android SDK")
         description.set("Native in-app ID verification & KYC for Android (ID Analyzer DocuPass) — document scan, face match, on-device liveness. No WebView.")
