@@ -18,7 +18,7 @@ Add the SDK from Maven Central:
 
 ```kotlin
 dependencies {
-    implementation("com.idanalyzer:docupass:0.1.4")
+    implementation("com.idanalyzer:docupass:0.1.5")
 }
 ```
 
