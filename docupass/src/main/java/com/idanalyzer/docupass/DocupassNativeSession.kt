@@ -83,7 +83,8 @@ data class DocupassKycNativeState(
     val face: DocupassFaceVerificationPayload? = null,
     val contract: DocupassContractPayload? = null,
     val completed: DocupassCompletedPayload? = null,
-    val failed: DocupassFailedPayload? = null
+    val failed: DocupassFailedPayload? = null,
+    val canGoBack: Boolean = false
 )
 
 interface DocupassKycListener {
@@ -129,6 +130,10 @@ class DocupassKycSession {
 
     fun refresh() {
         controller.emit(DocupassKycIntent.Refresh)
+    }
+
+    fun back() {
+        controller.emit(DocupassKycIntent.Back)
     }
 
     fun clearError() {
@@ -183,6 +188,7 @@ fun DocupassKycUiState.toNativeState(): DocupassKycNativeState {
         DocupassKycEvent.Loading -> DocupassKycNativeState(
             event = DocupassKycEventKind.LOADING,
             isBusy = isBusy,
+            canGoBack = canGoBack,
             errorMessage = currentError?.message,
             normalizedError = currentError?.normalized,
             result = result
@@ -191,6 +197,7 @@ fun DocupassKycUiState.toNativeState(): DocupassKycNativeState {
         is DocupassKycEvent.PhoneVerification -> DocupassKycNativeState(
             event = DocupassKycEventKind.PHONE_VERIFICATION,
             isBusy = isBusy,
+            canGoBack = canGoBack,
             errorMessage = currentError?.message,
             normalizedError = currentError?.normalized,
             result = result,
@@ -204,6 +211,7 @@ fun DocupassKycUiState.toNativeState(): DocupassKycNativeState {
         is DocupassKycEvent.CustomForm -> DocupassKycNativeState(
             event = DocupassKycEventKind.CUSTOM_FORM,
             isBusy = isBusy,
+            canGoBack = canGoBack,
             errorMessage = currentError?.message,
             normalizedError = currentError?.normalized,
             result = result,
@@ -213,6 +221,7 @@ fun DocupassKycUiState.toNativeState(): DocupassKycNativeState {
         is DocupassKycEvent.DocumentCountrySelection -> DocupassKycNativeState(
             event = DocupassKycEventKind.DOCUMENT_COUNTRY_SELECTION,
             isBusy = isBusy,
+            canGoBack = canGoBack,
             errorMessage = currentError?.message,
             normalizedError = currentError?.normalized,
             result = result,
@@ -225,6 +234,7 @@ fun DocupassKycUiState.toNativeState(): DocupassKycNativeState {
         is DocupassKycEvent.DocumentSelection -> DocupassKycNativeState(
             event = DocupassKycEventKind.DOCUMENT_SELECTION,
             isBusy = isBusy,
+            canGoBack = canGoBack,
             errorMessage = currentError?.message,
             normalizedError = currentError?.normalized,
             result = result,
@@ -238,6 +248,7 @@ fun DocupassKycUiState.toNativeState(): DocupassKycNativeState {
         is DocupassKycEvent.DocumentCapture -> DocupassKycNativeState(
             event = DocupassKycEventKind.DOCUMENT_CAPTURE,
             isBusy = isBusy,
+            canGoBack = canGoBack,
             errorMessage = currentError?.message,
             normalizedError = currentError?.normalized,
             result = result,
@@ -252,6 +263,7 @@ fun DocupassKycUiState.toNativeState(): DocupassKycNativeState {
         is DocupassKycEvent.FaceVerification -> DocupassKycNativeState(
             event = DocupassKycEventKind.FACE_VERIFICATION,
             isBusy = isBusy,
+            canGoBack = canGoBack,
             errorMessage = currentError?.message,
             normalizedError = currentError?.normalized,
             result = result,
@@ -261,6 +273,7 @@ fun DocupassKycUiState.toNativeState(): DocupassKycNativeState {
         is DocupassKycEvent.Contract -> DocupassKycNativeState(
             event = DocupassKycEventKind.CONTRACT,
             isBusy = isBusy,
+            canGoBack = canGoBack,
             errorMessage = currentError?.message,
             normalizedError = currentError?.normalized,
             result = result,
@@ -274,6 +287,7 @@ fun DocupassKycUiState.toNativeState(): DocupassKycNativeState {
         DocupassKycEvent.PartyPending -> DocupassKycNativeState(
             event = DocupassKycEventKind.PARTY_PENDING,
             isBusy = isBusy,
+            canGoBack = canGoBack,
             errorMessage = currentError?.message,
             normalizedError = currentError?.normalized,
             result = result
@@ -282,6 +296,7 @@ fun DocupassKycUiState.toNativeState(): DocupassKycNativeState {
         is DocupassKycEvent.Completed -> DocupassKycNativeState(
             event = DocupassKycEventKind.COMPLETED,
             isBusy = isBusy,
+            canGoBack = canGoBack,
             errorMessage = currentError?.message,
             normalizedError = currentError?.normalized,
             result = result,
@@ -291,6 +306,7 @@ fun DocupassKycUiState.toNativeState(): DocupassKycNativeState {
         is DocupassKycEvent.Failed -> DocupassKycNativeState(
             event = DocupassKycEventKind.FAILED,
             isBusy = isBusy,
+            canGoBack = canGoBack,
             errorMessage = currentError?.message,
             normalizedError = currentError?.normalized,
             result = result,

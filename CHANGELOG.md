@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Expanded the public README with detailed Quick UI, event session lifecycle,
+  state payload, session method, and parameter reference documentation.
+- Added `DocupassKycSession.back()` and `DocupassKycNativeState.canGoBack` so
+  custom UI integrations can implement SDK back navigation.
+- Ignored the local Kotlin/Gradle `.kotlin/` cache directory.
+
 ## 0.1.5
 
 Major SDK API refresh.
