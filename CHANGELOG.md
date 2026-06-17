@@ -1,5 +1,31 @@
 # Changelog
 
+## Unreleased
+
+Major SDK API refresh.
+
+- Replaced the legacy `DocuPassView` entry point with the new `KYCScreen` Quick UI.
+  The Quick UI now exposes `onFinish` for the final FINISH button and
+  `onBackAtFirstStep` for app-level dismissal from the first step.
+- Added an event-driven integration API for custom UI builds:
+  `DocupassKycSession`, `DocupassKycListener`, `DocupassKycNativeState`, and
+  `DocupassKycEventKind`.
+- Consolidated the SDK implementation under the public `com.idanalyzer.docupass`
+  package. The native workflow, API client, error handling, and Compose UI are now
+  packaged directly in the Android SDK artifact.
+- Reworked the server-driven flow with back-stack support. Non-terminal steps can
+  navigate back; terminal success/failure screens stay terminal until FINISH is
+  tapped.
+- Updated face verification to randomize liveness actions while requiring at least
+  two actions.
+- Removed the old `DocuPassClient`, `DocuPassController`, `DocuPassView`,
+  customization objects, old screen implementations, and legacy model packages.
+- Updated the sample app to use `KYCScreen`.
+- Rewrote the README for the new Quick UI and event API.
+- Fixed local Maven publishing so `publishToMavenLocal` works without signing
+  credentials, while Maven Central publishing still signs when signing credentials
+  are provided.
+
 ## 0.1.4
 
 Terminal/display error-code classification.
