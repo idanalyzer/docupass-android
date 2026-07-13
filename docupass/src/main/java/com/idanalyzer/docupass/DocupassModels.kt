@@ -102,7 +102,7 @@ data class DocupassSessionState(
     }
 
     fun acceptedDocumentTypeCodes(): List<String> {
-        return acceptedDocumentType.commaSeparatedValues()
+        return acceptedDocumentType.documentTypeCodeValues()
     }
 }
 
@@ -220,3 +220,17 @@ internal fun String?.commaSeparatedValues(): List<String> {
         .orEmpty()
 }
 
+internal fun String?.documentTypeCodeValues(): List<String> {
+    val knownCodes = KYCDocumentType.entries.map { it.apiTypeCode.uppercase() }.toSet()
+    return commaSeparatedValues()
+        .flatMap { value ->
+            val normalized = value.uppercase()
+            when {
+                normalized in knownCodes -> listOf(normalized)
+                normalized.length > 1 && normalized.all { it.toString() in knownCodes } ->
+                    normalized.map { it.toString() }
+                else -> listOf(normalized)
+            }
+        }
+        .distinct()
+}

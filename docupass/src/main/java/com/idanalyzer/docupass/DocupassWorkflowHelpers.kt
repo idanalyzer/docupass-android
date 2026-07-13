@@ -56,7 +56,11 @@ internal fun documentTypeFromCode(code: String): KYCDocumentType? {
 }
 
 internal fun documentTypesForFilter(acceptedTypes: List<String>?): List<KYCDocumentType> {
-    val accepted = acceptedTypes?.map { it.uppercase() }?.toSet().orEmpty()
+    val accepted = acceptedTypes
+        ?.flatMap { it.documentTypeCodeValues() }
+        ?.map { it.uppercase() }
+        ?.toSet()
+        .orEmpty()
     return if (accepted.isEmpty()) {
         KYCDocumentType.entries
     } else {
@@ -112,4 +116,3 @@ internal fun String.isDiagnosticTokenList(): Boolean {
         part.matches(Regex("""[A-Z][A-Z0-9_ -]{2,}"""))
     }
 }
-

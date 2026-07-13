@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.7
+
+- Fixed compact accepted document type filters such as `IPD` so they expand to
+  identity card, passport, and driver license options instead of hiding all
+  document type buttons.
+
 ## 0.1.6
 
 - Expanded the public README with detailed Quick UI, event session lifecycle,
