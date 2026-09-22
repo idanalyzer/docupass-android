@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.8
+
+- Updated MediaPipe Tasks Vision to `0.10.26` so bundled native libraries support
+  Android devices that use a 16 KB memory page size.
+- Moved OkHttp connection cleanup off the main thread so leaving `KYCScreen`
+  cannot throw `NetworkOnMainThreadException` while closing a TLS connection.
+
 ## 0.1.7
 
 - Fixed compact accepted document type filters such as `IPD` so they expand to

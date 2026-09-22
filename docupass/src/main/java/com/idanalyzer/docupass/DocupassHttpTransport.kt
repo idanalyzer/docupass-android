@@ -6,6 +6,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.TimeUnit
 
 internal data class DocupassHttpResponse(
@@ -44,6 +45,7 @@ private class OkHttpDocupassHttpTransport(
     private val client: OkHttpClient
 ) : DocupassHttpTransport {
     private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
+    private val closed = AtomicBoolean(false)
 
     override suspend fun request(
         method: String,
@@ -69,7 +71,15 @@ private class OkHttpDocupassHttpTransport(
     }
 
     override fun close() {
-        client.dispatcher.executorService.shutdown()
-        client.connectionPool.evictAll()
+        if (!closed.compareAndSet(false, true)) return
+
+        Thread({
+            client.dispatcher.cancelAll()
+            client.connectionPool.evictAll()
+            client.dispatcher.executorService.shutdown()
+        }, "DocuPass-OkHttp-close").apply {
+            isDaemon = true
+            start()
+        }
     }
 }

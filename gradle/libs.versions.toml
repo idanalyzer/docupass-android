@@ -9,7 +9,7 @@ coroutines = "1.9.0"
 serialization = "1.7.3"
 okhttp = "4.12.0"
 camerax = "1.4.1"
-mediapipeVision = "0.10.18"
+mediapipeVision = "0.10.26"
 mavenPublish = "0.30.0"
 
 [libraries]
